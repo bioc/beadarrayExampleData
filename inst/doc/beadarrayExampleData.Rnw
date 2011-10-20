@@ -1,0 +1,93 @@
+%\VignetteIndexEntry{beadarrayExampleData: example data for the beadarray package}
+%\VignetteKeywords{Illumina, beadarray}
+%\VignettePackage{beadarrayExampleData}
+\documentclass[12pt]{article}
+
+\usepackage{amsmath,pstricks}
+\usepackage{hyperref}
+\usepackage[authoryear,round]{natbib}
+
+\textwidth=6.2in
+\textheight=8.5in
+\parskip=.3cm
+\oddsidemargin=.1in
+\evensidemargin=.1in
+\headheight=-.3in
+
+\newcommand{\scscst}{\scriptscriptstyle}
+\newcommand{\scst}{\scriptstyle}
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textit{#1}}}
+
+\author{Mark Dunning}
+\begin{document}
+\title{Example data for use with the beadarray package}
+
+\maketitle
+\tableofcontents
+
+<<echo=FALSE, eval=TRUE>>=
+options(width=70)
+@
+
+
+\section{Data Introduction}\label{sec:intro} 
+
+This package provides a lightweight dataset for those wishing to try out the examples within the \Rpackage{beadarray} package. The data in this package are a subset of the MAQC bead-level data available in the \Rpackage{beadarrayUseCases} package. `Bead-level' refers to the availability of intensity and location information for each bead on each BeadArray in an experiment.  In this dataset, BeadArrays were hybridized with either Universal Human Reference RNA (UHRR, Stratagene) or Brain Reference RNA (Ambion) as used in the MAQC project. This pacakge includes a representation of the bead-level data for 2 arrays in the data object \Robject{exampleBLdata}, which was created by beadarray. The summarised data for all 12 arrays are given in the \Robject{exampleSummaryData} object, which was creating by first reading the bead-level data for all 12 sections into \Rpackage{beadarray} and then summarising using the procedures described in the vignette for \Rpackage{BeadArrayUseCases}.
+
+
+\section{Loading the data}\label{sec:load} 
+
+The example datasets can be loaded using the \Rfunction{data} function. The first dataset comprises two sections from the bead-level MAQC dataset generated at Cancer Research Uk (Cambridge Research Institute) that have been read in using the beadarray package. The second dataset is the summarised data of all sections from the same dataset.
+<<>>==
+library(beadarrayExampleData)
+data(exampleBLData)
+exampleBLData
+
+data(exampleSummaryData)
+exampleSummaryData
+pData(exampleSummaryData)
+@
+
+\section{Data creation}
+
+The following commands were used to create the data included with this package.
+
+
+<<eval=FALSE>>=
+
+require(BeadArrayUseCases)
+
+targets <- read.table(system.file("extdata/BeadLevelBabFiles/targetsHT12.txt", package = "BeadArrayUseCases"), header=TRUE, sep="\t", as.is=TRUE)
+sn <- paste(targets[,3], targets[,4], sep="_")
+
+babFilePath <- system.file("extdata/BeadLevelBabFiles", package = "BeadArrayUseCases")
+
+exampleBLData <- readIllumina(dir=babFilePath, sectionNames=sn[c(1,12)], useImages=FALSE, illuminaAnnotation="Humanv3")
+
+bsh <- BASH(exampleBLData,array=c(1,2))
+
+exampleBLData <- setWeights(exampleBLData, wts = bsh$wts, array=1:2)
+
+data <- readIllumina(dir=babFilePath, sectionNames=sn, useImages=FALSE, illuminaAnnotation="Humanv3")
+
+
+grnchannel <- new("illuminaChannel", transFun = logGreenChannelTransform, outlierFun = illuminaOutlierMethod, exprFun = function(x) mean(x,na.rm=TRUE),  varFun= function(x) sd(x, na.rm=TRUE),channelName= "G")
+
+
+grnchannel.unlogged <- new("illuminaChannel", transFun = greenChannelTransform, outlierFun = illuminaOutlierMethod, exprFun = function(x) mean(x,na.rm=TRUE),  varFun= function(x) sd(x, na.rm=TRUE),channelName= "G.ul")
+
+exampleSummaryData <- summarize(data, list(grnchannel, grnchannel.unlogged), useSampleFac=FALSE)
+
+
+pData(exampleSummaryData)[,2] <- targets[,2]
+
+
+@
+
+\end{document}
+
+
+
+
