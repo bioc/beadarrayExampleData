@@ -1,7 +1,7 @@
 Package: beadarrayExampleData
 Title: Example data for the beadarray package
 Version: 1.0.8
-Date: 2011-10-17
+Date: 2013-11-04
 Author: Mark Dunning
 Maintainer: Mark Dunning <Mark.Dunning@cancer.org.uk>
 Description: An small dataset that can be used to run examples from the beadarray vignette and examples
